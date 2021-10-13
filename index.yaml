@@ -3,10 +3,10 @@ entries:
   argo-cd:
   - annotations:
       artifacthub.io/changes: |
-        - "[Changed]: Upgrade argocd to 2.1.2"
+        - "[Added]: Uses extraVolumes and extraVolumeMounts for dex server"
     apiVersion: v2
-    appVersion: 2.1.2
-    created: "2021-09-06T09:01:17.281693725Z"
+    appVersion: 2.1.3
+    created: "2021-10-13T09:52:04.85898717Z"
     dependencies:
     - condition: redis-ha.enabled
       name: redis-ha
@@ -14,7 +14,7 @@ entries:
       version: 4.12.17
     description: A Helm chart for ArgoCD, a declarative, GitOps continuous delivery
       tool for Kubernetes.
-    digest: 718f4055ef702aca6cd59ddca1157af1c7aaf4dfccaccb8e28f9a6d2bbe3c04f
+    digest: 7e22e54d8e26dd1557cba286c340a82e7c3ebe703eaea33f181d32caf79156da
     home: https://github.com/argoproj/argo-helm
     icon: https://argoproj.github.io/argo-cd/assets/logo.png
     keywords:
@@ -28,17 +28,17 @@ entries:
     - name: seanson
     name: argo-cd
     urls:
-    - https://github.com/krecik/argo-helm/releases/download/argo-cd-3.17.6/argo-cd-3.17.6.tgz
-    version: 3.17.6
+    - https://github.com/krecik/argo-helm/releases/download/argo-cd-3.25.0/argo-cd-3.25.0.tgz
+    version: 3.25.0
   argo-rollouts:
   - annotations:
       artifacthub.io/changes: |
-        - "[Fixed]: ServiceMonitor selector labels match metrics Service"
+        - "[Added]: Two separate tests. One for default values and one for dashboard enabled."
     apiVersion: v2
     appVersion: v1.0.2
-    created: "2021-09-06T09:01:17.471821771Z"
+    created: "2021-10-13T09:52:05.076812899Z"
     description: A Helm chart for Argo Rollouts
-    digest: 061b43eed967ada2b739c823d47164f5573819205a607e3510490928a3b3a158
+    digest: 1e66dc711b4decfbd0733816d635253107897d100ebf6175380eb6246322315d
     home: https://github.com/argoproj/argo-helm
     icon: https://argoproj.github.io/argo-rollouts/assets/logo.png
     maintainers:
@@ -47,6 +47,98 @@ entries:
     - name: jessesuen
     name: argo-rollouts
     urls:
-    - https://github.com/krecik/argo-helm/releases/download/argo-rollouts-2.0.1/argo-rollouts-2.0.1.tgz
-    version: 2.0.1
-generated: "2021-09-06T09:01:17.471826671Z"
+    - https://github.com/krecik/argo-helm/releases/download/argo-rollouts-2.1.1/argo-rollouts-2.1.1.tgz
+    version: 2.1.1
+  argo-workflows:
+  - annotations:
+      artifacthub.io/changes: |
+        - "[Added]: Also test with default values"
+    apiVersion: v2
+    appVersion: v3.1.8
+    created: "2021-10-13T09:52:05.345820704Z"
+    description: A Helm chart for Argo Workflows
+    digest: 1cf62fd624d873af3a50c178769c93030052fe52654867a41abd860b483af89c
+    home: https://github.com/argoproj/argo-helm
+    icon: https://raw.githubusercontent.com/argoproj/argo-workflows/master/docs/assets/argo.png
+    maintainers:
+    - name: alexec
+    - name: alexmt
+    - name: jessesuen
+    - name: benjaminws
+    name: argo-workflows
+    sources:
+    - https://github.com/argoproj/argo-workflows
+    type: application
+    urls:
+    - https://github.com/krecik/argo-helm/releases/download/argo-workflows-0.7.1/argo-workflows-0.7.1.tgz
+    version: 0.7.1
+  argocd-applicationset:
+  - annotations:
+      artifacthub.io/changes: |
+        - "[Removed]: Duplicated default values during chart testing"
+    apiVersion: v2
+    appVersion: v0.2.0
+    created: "2021-10-13T09:52:05.553445417Z"
+    description: A Helm chart for installing ArgoCD ApplicationSet
+    digest: 5db338525588781b17a926ba7cf50aef9b80842adc72dd83f6c325a303ae1108
+    home: https://github.com/argoproj/argo-helm
+    icon: https://argocd-applicationset.readthedocs.io/en/stable/assets/logo.png
+    keywords:
+    - argoproj
+    - appset
+    - gitops
+    maintainers:
+    - name: maruina
+    name: argocd-applicationset
+    type: application
+    urls:
+    - https://github.com/krecik/argo-helm/releases/download/argocd-applicationset-1.5.1/argocd-applicationset-1.5.1.tgz
+    version: 1.5.1
+  argocd-image-updater:
+  - annotations:
+      artifacthub.io/changes: |
+        - "[Fixed]: Update default values example for extraArgs
+    apiVersion: v2
+    appVersion: v0.10.1
+    created: "2021-10-13T09:52:05.791294976Z"
+    description: A Helm chart for Argo CD Image Updater, a tool to automatically update
+      the container images of Kubernetes workloads which are managed by Argo CD
+    digest: 75fecedcc4102381d836d2adc262dd31c39e85350f5661b3997065a4f068e692
+    home: https://github.com/argoproj-labs/argocd-image-updater
+    icon: https://argocd-image-updater.readthedocs.io/en/stable/assets/logo.png
+    keywords:
+    - argoproj
+    - argocd
+    - gitops
+    maintainers:
+    - name: argoproj
+      url: https://argoproj.github.io/
+    name: argocd-image-updater
+    type: application
+    urls:
+    - https://github.com/krecik/argo-helm/releases/download/argocd-image-updater-0.2.1/argocd-image-updater-0.2.1.tgz
+    version: 0.2.1
+  argocd-notifications:
+  - annotations:
+      artifacthub.io/changes: |
+        - "[Added]: Support annotations on secret objects"
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2021-10-13T09:52:05.996510186Z"
+    description: A Helm chart for ArgoCD notifications, an add-on to ArgoCD.
+    digest: e9acd4fe936f9e0eed9674c4333e4fe57e65d9c796f4a7c54f1bdcd63e2ee406
+    home: https://github.com/argoproj/argo-helm
+    icon: https://argocd-notifications.readthedocs.io/en/stable/assets/logo.png
+    keywords:
+    - argoproj
+    - argocd
+    - argocd-notifications
+    maintainers:
+    - name: alexmt
+    - name: andyfeller
+    name: argocd-notifications
+    type: application
+    urls:
+    - https://github.com/krecik/argo-helm/releases/download/argocd-notifications-1.5.1/argocd-notifications-1.5.1.tgz
+    version: 1.5.1
+generated: "2021-10-13T09:52:05.996515986Z"
