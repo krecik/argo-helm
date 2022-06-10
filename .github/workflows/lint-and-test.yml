@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -15,13 +15,13 @@ jobs:
         uses: azure/setup-helm@v1
 
       - name: Set up python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Setup Chart Linting
         id: lint
-        uses: helm/chart-testing-action@v2.1.0
+        uses: helm/chart-testing-action@v2.2.1
 
       - name: List changed charts
         id: list-changed
@@ -35,6 +35,18 @@ jobs:
           fi
       - name: Run chart-testing (lint)
         run: ct lint --debug --config ./.github/configs/ct-lint.yaml --lint-conf ./.github/configs/lintconf.yaml
+      
+      - name: Run docs-testing (helm-docs)
+        id: helm-docs
+        run: |
+          ./scripts/helm-docs.sh
+          if [[ $(git diff --stat) != '' ]]; then
+            echo -e '\033[0;31mDocumentation outdated!\033[0m ❌'
+            git diff --color
+            exit 1
+          else
+            echo -e '\033[0;32mDocumentation up to date\033[0m ✔'
+          fi
 
       - name: Create kind cluster
         uses: helm/kind-action@v1.2.0
@@ -44,9 +56,7 @@ jobs:
 
       - name: Deploy latest ArgoCD CRDs when testing ArgoCD extensions
         if: |
-          contains(steps.list-changed.outputs.changed_charts, 'argocd-applicationset') ||
-          contains(steps.list-changed.outputs.changed_charts, 'argocd-image-updater') ||
-          contains(steps.list-changed.outputs.changed_charts, 'argocd-notifications')
+          contains(steps.list-changed.outputs.changed_charts, 'argocd-image-updater')
         run: |
           kubectl apply -f charts/argo-cd/crds
 
@@ -55,6 +65,13 @@ jobs:
         run: |
           ## Metrics API not available in kind cluster
           rm charts/argo-cd/ci/ha-autoscaling-values.yaml
+
+      - name: Create an external redis for ArgoCD externalRedis feature
+        if: contains(steps.list-changed.outputs.changed_charts, 'argo-cd')
+        run: |
+          kubectl create namespace redis
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm install redis bitnami/redis --wait --namespace redis --set auth.password=argocd --set architecture=standalone
 
       - name: Run chart-testing (install)
         run: ct install --config ./.github/configs/ct-install.yaml

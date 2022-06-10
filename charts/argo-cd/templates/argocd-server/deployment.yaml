@@ -18,7 +18,9 @@ spec:
     metadata:
       {{- with (mergeOverwrite (deepCopy .Values.global.podAnnotations) .Values.server.podAnnotations) }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- range $key, $value := . }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
       {{- end }}
       labels:
         {{- include "argo-cd.labels" (dict "context" . "component" .Values.server.name "name" .Values.server.name) | nindent 8 }}
@@ -27,7 +29,7 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.global.imagePullSecrets }}
+      {{- with .Values.server.imagePullSecrets | default .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -57,6 +59,9 @@ spec:
         {{- if or (and .Values.redis.enabled (not $redisHa.enabled)) (and $redisHa.enabled $redisHa.haproxy.enabled) }}
         - --redis
         - {{ template "argo-cd.redis.fullname" . }}:{{ .Values.redis.servicePort }}
+        {{- else if and .Values.externalRedis.host .Values.externalRedis.port }}
+        - --redis
+        - {{ .Values.externalRedis.host }}:{{ .Values.externalRedis.port }}
         {{- end }}
         {{- with .Values.server.extraArgs }}
         {{- . | toYaml | nindent 8 }}
@@ -64,9 +69,12 @@ spec:
         {{- if .Values.server.containerSecurityContext }}
         securityContext: {{- toYaml .Values.server.containerSecurityContext | nindent 10 }}
         {{- end }}
-        {{- if .Values.server.env }}
+        {{- if or .Values.server.env .Values.externalRedis.password .Values.externalRedis.existingSecret }}
         env:
-{{- toYaml .Values.server.env | nindent 8 }}
+          {{- include "argo-cd.redisPasswordEnv" . | nindent 8 }}
+          {{- with .Values.server.env }}
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
         {{- end }}
         {{- with .Values.server.envFrom }}
         envFrom: {{- toYaml . | nindent 8 }}
@@ -75,14 +83,16 @@ spec:
         {{- if .Values.server.volumeMounts }}
 {{- toYaml .Values.server.volumeMounts | nindent 8}}
         {{- end }}
+        {{- if .Values.server.extensions.enabled }}
+        - name: extensions
+          mountPath: /tmp/extensions/
+        {{- end }}
         {{- if .Values.configs.knownHosts }}
         - mountPath: /app/config/ssh
           name: ssh-known-hosts
         {{- end }}
-        {{- if .Values.configs.tlsCerts }}
         - mountPath: /app/config/tls
           name: tls-certs
-        {{- end }}
         - mountPath: /app/config/server/tls
           name: argocd-repo-server-tls
         {{- if .Values.configs.styles }}
@@ -90,6 +100,12 @@ spec:
           subPath: "custom.styles.css"
           name: custom-styles
         {{- end }}
+        {{- if .Values.server.containerSecurityContext.readOnlyRootFilesystem }}
+        - mountPath: /home/argocd/.aws
+          name: aws-config
+        {{- end }}
+        - mountPath: /home/argocd
+          name: plugins-home
         - mountPath: /tmp
           name: tmp-dir
         ports:
@@ -128,6 +144,16 @@ spec:
       {{- with .Values.server.extraContainers }}
         {{- toYaml . | nindent 6 }}
       {{- end }}
+      {{- if .Values.server.extensions.enabled }}
+      - name: argocd-extensions
+        image: {{ .Values.server.extensions.image.repository }}:{{ .Values.server.extensions.image.tag }}
+        imagePullPolicy: {{ .Values.server.extensions.image.imagePullPolicy }}
+        volumeMounts:
+          - name: extensions
+            mountPath: /tmp/extensions/
+        resources:
+          {{- toYaml .Values.server.extensions.resources | nindent 10 }}
+      {{- end }}
     {{- if .Values.server.nodeSelector }}
       nodeSelector:
 {{- toYaml .Values.server.nodeSelector | nindent 8 }}
@@ -160,10 +186,16 @@ spec:
       {{- if .Values.server.volumes }}
 {{- toYaml .Values.server.volumes | nindent 6}}
       {{- end }}
-      - emptyDir: {}
-        name: static-files
+      {{- if .Values.server.extensions.enabled }}
+      - name: extensions
+        emptyDir: {}
+      {{- end }}
       - emptyDir: {}
         name: tmp-dir
+      {{- if .Values.server.containerSecurityContext.readOnlyRootFilesystem }}
+      - emptyDir: {}
+        name: aws-config
+      {{- end }}
       {{- if .Values.configs.styles }}
       - configMap:
           name: argocd-custom-styles
@@ -174,11 +206,9 @@ spec:
           name: argocd-ssh-known-hosts-cm
         name: ssh-known-hosts
       {{- end }}
-      {{- if .Values.configs.tlsCerts }}
       - configMap:
           name: argocd-tls-certs-cm
         name: tls-certs
-      {{- end }}
       - name: argocd-repo-server-tls
         secret:
           items:
@@ -190,6 +220,12 @@ spec:
             path: ca.crt
           optional: true
           secretName: argocd-repo-server-tls
+      - emptyDir: {}
+        name: plugins-home
+      {{- if .Values.server.initContainers }}
+      initContainers:
+      {{- toYaml .Values.server.initContainers | nindent 6 }}
+      {{- end }}
 {{- if .Values.server.priorityClassName }}
       priorityClassName: {{ .Values.server.priorityClassName }}
 {{- end }}

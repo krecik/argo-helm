@@ -21,6 +21,9 @@ data:
     {{- if .Values.controller.parallelism }}
     parallelism: {{ .Values.controller.parallelism }}
     {{- end }}
+    {{- if .Values.controller.resourceRateLimit }}
+    resourceRateLimit: {{ toYaml .Values.controller.resourceRateLimit | nindent 6 }}
+    {{- end }}
     {{- with .Values.controller.namespaceParallelism }}
     namespaceParallelism: {{ . }}
     {{- end }}
@@ -73,6 +76,10 @@ data:
         {{- if .Values.artifactRepository.s3.useSDKCreds }}
         useSDKCreds: {{ .Values.artifactRepository.s3.useSDKCreds }}
         {{- end }}
+        {{- with .Values.artifactRepository.s3.encryptionOptions }}
+        encryptionOptions:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       {{- end }}
     {{- end}}
     {{- if .Values.controller.metricsConfig.enabled }}
@@ -95,4 +102,7 @@ data:
     {{- end }}
     {{- with .Values.controller.links }}
     links: {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.controller.navColor }}
+    navColor: {{ . }}
     {{- end }}

@@ -48,6 +48,20 @@ annotations:
     - "[Security]": Some Security Patch was included"
 ```
 
+## Documentation
+
+The documentation for each chart is done with [helm-docs](https://github.com/norwoodj/helm-docs). This way we can ensure that values are consistent with the chart documentation.
+
+We have a script on the repository which will execute the helm-docs docker container, so that you don't have to worry about downloading the binary etc. Simply execute the script (Bash compatible, might require sudo privileges):
+
+```
+bash scripts/helm-docs.sh
+```
+
+**NOTE**: When creating your own `README.md.gotmpl`, don't forget to add it to your `.helmignore` file.
+
+
+
 # Testing
 
 ## Testing Argo Workflows Changes
@@ -105,16 +119,6 @@ argocd app create guestbook --dest-namespace default --dest-server https://kuber
 argocd app sync guestbook
 ```
 
-## Testing Argo CD Notification Changes
-
-Thorough testing of argocd-notifications would require one or more notification services (Slack, OpsGenie, etc), however
-minimal testing mostly consists of successful Helm chart installation and the argocd-notifications controller having
-access to the `Application` resources in the same namespace that Argo CD is installed.
-
-```
-helm install argocd-notifications charts/argocd-notifications --namespace argocd
-```
-
 ## New Application Versions
 
 When raising application versions ensure you make the following changes:
@@ -144,4 +148,4 @@ The linting can be invoked manually with the following command:
 
 ## Publishing Changes
 
-Changes are automatically publish whenever a commit is merged to master. The CI job (see `./.github/workflows/publish.yml`).
+Changes are automatically publish whenever a commit is merged to main. The CI job (see `./.github/workflows/publish.yml`).
